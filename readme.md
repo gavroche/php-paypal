@@ -1,5 +1,5 @@
 phpPayPal Class
-=======================
+===============
 
 For full documentation and information, please visit the Wiki at GitHub: https://github.com/drewjoh/phpPayPal/wiki
 
