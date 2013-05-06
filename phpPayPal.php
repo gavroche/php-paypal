@@ -22,7 +22,7 @@
 
 class phpPayPal { 
 	
-	private $sandbox		= true;
+	private $sandbox		= false;
 	private $live			= false;
 	
 	private $API_ENDPOINT	= null;
@@ -431,6 +431,7 @@ class phpPayPal {
 				'return_url' 				=> array('name' => 'RETURNURL', 'required' => 'yes'),
 				'cancel_url' 				=> array('name' => 'CANCELURL', 'required' => 'yes'),
 				'amount_total' 				=> array('name' => 'AMT', 'required' => 'yes'), 
+				'amount_tax' 				=> array('name' => 'TAXAMT', 'required' => 'no'), 
 				'currency_code' 			=> array('name' => 'CURRENCYCODE', 'required' => 'no'), 
 				'amount_max' 				=> array('name' => 'MAXAMT', 'required' => 'no'), 
 				'payment_type' 				=> array('name' => 'PAYMENTACTION', 'required' => 'no'), 
@@ -933,6 +934,8 @@ class phpPayPal {
 	// CONSTRUCT
 	function __construct($config, $sandbox = false)
 	{
+	    $this->sandbox = $sandbox;
+	    
 		// Determine our API endpoint
 		if ($sandbox)
 			$this->API_ENDPOINT = 'https://api-3t.sandbox.paypal.com/nvp';
@@ -1102,6 +1105,31 @@ class phpPayPal {
 		// decode the variables incase we still require access to them in our program
 		$this->urldecodeVariables();
 		
+		/* Construct and add any items found in this instance */
+		if(!empty($this->ItemsArray))
+		{
+			// Counter for the total of all the items put together
+			$total_items_amount = 0;
+			// Go through the items array
+			foreach($this->ItemsArray as $key => $value)
+			{
+				// Get the array of the current item from the main array
+				$current_item = $this->ItemsArray[$key];
+				// Add it to the request string
+				$nvpstr .= "&L_NAME".$key."=".$current_item['name'].
+							"&L_NUMBER".$key."=".$current_item['number'].
+							"&L_QTY".$key."=".$current_item['quantity'].
+							"&L_DESC".$key."=".$current_item['description'].
+							"&L_TAXAMT".$key."=".$current_item['amount_tax'].
+							"&L_AMT".$key."=".$current_item['amount'];
+				// Add this item's amount to the total current count
+				$total_items_amount += ($current_item['amount'] * $current_item['quantity']);
+			}
+			// Set the amount_items for this instance and ITEMAMT added to the request string
+			$this->amount_items = $total_items_amount;
+			$nvpstr .= "&ITEMAMT=".$total_items_amount;
+		}
+		
 		/* Make the call to PayPal to set the Express Checkout token
 			If the API call succeded, then redirect the buyer to PayPal
 			to begin to authorize payment.  If an error occured, show the
@@ -1116,8 +1144,15 @@ class phpPayPal {
 	public function set_express_checkout_successful_redirect()
 	{
 		// Redirect to paypal.com here
+		var_dump($this->Response);
 		$token = urlencode($this->Response["TOKEN"]);
-		$paypal_url = $this->PAYPAL_URL.$token;
+		
+		if ($this->sandbox) {
+    		$paypal_url = "https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&useraction=commit&token={$token}";
+		} else {
+    		$paypal_url = "https://www.paypal.com/cgi-bin/webscr?cmd=_express-checkout&useraction=commit&token={$token}";
+		}
+		
 		header("Location: ".$paypal_url);
 	}
 	
@@ -1448,14 +1483,16 @@ class phpPayPal {
 	}
 		
 	/* This function will add an item to the itemArray for use in doDirectPayment and doExpressCheckoutPayment */
-	public function add_item($name, $number, $quantity, $amount_tax, $amount)
+	public function add_item($name, $number, $quantity, $amount_tax, $amount, $description = '' )
 	{
 		$new_item =  array(
 				'name' => $name, 
 				'number' => $number, 
 				'quantity' => $quantity, 
 				'amount_tax' => $amount_tax, 
-				'amount' => $amount);
+				'amount' => $amount,
+				'description' => $description
+        );
 		
 		$this->ItemsArray[] = $new_item;
 		
@@ -1683,11 +1720,10 @@ class phpPayPal {
 		{
 			/* Take the response variables and put them into the local class variables */
 			foreach($this->ResponseFieldsArray[$response_type] as $key => $value)
-				$this->$key = $this->Response[$value];
+				if (isset($this->Response[$value])) $this->$key = $this->Response[$value];
 			
 			return true;
 		}
 	}
 
 }  // END CLASS
-
