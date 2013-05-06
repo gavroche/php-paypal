@@ -1,0 +1,26 @@
+{
+    "name": "gavroche/paypal",
+    "type": "library",
+    "description": "PayPal API Wrapper",
+    "keywords": ["paypal", "api", "wrapper"],
+    "homepage": "https://github.com/gavroche/php-paypal",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Drew Johnston",
+            "email": "drewjoh@gmail.com"
+        },
+        {
+            "name": "Gabriel Bull",
+            "email": "gavroche.bull@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3"
+    },
+    "autoload": {
+        "psr-0": {
+            "PayPal": "src/"
+        }
+    }
+}
