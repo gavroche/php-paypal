@@ -1,9 +1,9 @@
 {
-    "name": "gavroche/paypal",
+    "name": "gabrielbull/paypal",
     "type": "library",
     "description": "PayPal API Wrapper",
     "keywords": ["paypal", "api", "wrapper"],
-    "homepage": "https://github.com/gavroche/php-paypal",
+    "homepage": "https://github.com/gabrielbull/php-paypal",
     "license": "Apache-2.0",
     "authors": [
         {
@@ -12,7 +12,7 @@
         },
         {
             "name": "Gabriel Bull",
-            "email": "gavroche.bull@gmail.com"
+            "email": "me@gabrielbull.com"
         }
     ],
     "require": {
